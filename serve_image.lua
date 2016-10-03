@@ -80,6 +80,7 @@ if result ~= 0 then
   ngx.log(ngx.ERR, "failed to load xml file")
   local errstr = ffi.string(clib.mapnik_map_last_error(map))
   ngx.log(ngx.ERR, errstr)
+  ngx.exit(0)
 end
 
 local xmin = 16671833.113336448
@@ -87,10 +88,24 @@ local ymin = -3443946.7464169525
 local xmax = 16750104.630300466
 local ymax = -3365675.229452934
 local box = clib.mapnik_bbox(xmin, ymin, xmax, ymax)
+if result ~= 0 then
+  ngx.log(ngx.ERR, "failed to create bounding box")
+  local errstr = ffi.string(clib.mapnik_map_last_error(map))
+  ngx.log(ngx.ERR, errstr)
+  ngx.exit(0)
+end
 
 clib.mapnik_map_zoom_to_box(map, box)
 local file_cache_path = "./cache/" .. layername .. "/" .. z .. "/" .. x .. "/" .. y .. ".jpg"
-clib.mapnik_map_render_to_file(map, file_cache_path)
+result = clib.mapnik_map_render_to_file(map, file_cache_path)
+if result ~= 0 then
+  ngx.log(ngx.ERR, "failed to render image")
+  local errstr = ffi.string(clib.mapnik_map_last_error(map))
+  ngx.log(ngx.ERR, errstr)
+  ngx.exit(0)
+end
+
+
 clib.mapnik_map_free(map)
 
 -- trigger new internal request
