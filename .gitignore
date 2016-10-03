@@ -39,3 +39,7 @@ luac.out
 *.x86_64
 *.hex
 
+# TIFs or compressed TIFs
+*.TIF
+*.TIF.bz2
+
