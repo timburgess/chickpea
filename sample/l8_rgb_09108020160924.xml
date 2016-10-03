@@ -4,7 +4,7 @@
 <StyleName>style</StyleName>
 <Datasource>
 <Parameter name="type">gdal</Parameter>
-<Parameter name="file">/Users/tim/work/or/satamap/09108020160924rgb.TIF</Parameter>
+<Parameter name="file">/Users/tim/work/chickpea/sample/09108020160924rgb.TIF</Parameter>
 <Parameter name="format">tiff</Parameter>
 </Datasource>
 </Layer>
