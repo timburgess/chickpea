@@ -98,6 +98,8 @@ end
 clib.mapnik_map_zoom_to_box(map, box)
 local file_cache_path = "./cache/" .. layername .. "/" .. z .. "/" .. x .. "/" .. y .. ".jpg"
 result = clib.mapnik_map_render_to_file(map, file_cache_path)
+-- log where tile is being written to
+ngx.log(ngx.NOTICE, "Writing to " .. file_cache_path)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to render image")
   local errstr = ffi.string(clib.mapnik_map_last_error(map))
