@@ -125,6 +125,10 @@ end
 clib.mapnik_map_zoom_to_box(map, box)
 
 local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
+-- check if cache dir exists. if not, create it
+local newdir = file_cache_path:match("(.*/)")
+os.execute("mkdir " .. newdir)
+
 result = clib.mapnik_map_render_to_file(map, file_cache_path)
 -- log where tile is being written to
 ngx.log(ngx.NOTICE, "Writing to " .. file_cache_path)
