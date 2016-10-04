@@ -14,9 +14,10 @@ http {
         # capture tile request e.g. /tile/l8/091080/rgb/20160924/10/938/597.jpg
         # regex named capture groups for each param
         location ~ ^/tile/(?<layer>[^/]+)/(?<pathrow>[^/]+)/(?<type>[^/]+)/(?<date>[^/]+)/(?<z>[^/]+)/(?<x>[^/]+)/(?<y>[^.]+) {
-            root /Users/tim/work/chickpea/cache;
-            set $cachepath "/$layer/$pathrow/$type/$date/$z/$x/$y.jpg";
-            try_files $cachepath @image_server;
+          set $cacheroot "/Users/tim/work/chickpea/cache/"; # note trailing slash
+          root $cacheroot;
+          set $cachepath "$layer/$pathrow/$type/$date/$z/$x/$y.jpg";
+          try_files $cachepath @image_server;
         }
 
         # root page

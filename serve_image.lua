@@ -13,19 +13,47 @@
 --  ngx.log(ngx.ERR, errstr)
 --end
 
+-- new coords with zoom applied
+local function zoomTo(zoom_factor, z, x, y)
+  return x * math.pow(2, zoom_factor - z), y * math.pow(2, zoom_factor - z), zoom_factor
+end
+
+-- convert from Slippy Map coordinate to Web Mercator point
+-- see https://en.wikipedia.org/wiki/Web_Mercator
+local function coordinateProj(z, x, y)
+
+  -- zoom for meters on the ground
+  diameter = 2 * math.pi * 6378137
+  zoom_factor = math.log(diameter) / math.log(2)
+  x, y, z = zoomTo(zoom_factor, z, x, y)
+
+  -- global offsets
+  x = x - diameter/2
+  y = diameter/2 - y
+  return x, y
+
+end
+
+-- projected rendering envelope (xmin, ymin, xmax, ymax) for Slippy map coord
+local function envelope(z, x, y)
+  -- get upper left coords
+  ul_x, ul_y = coordinateProj(z, x, y)
+  -- lower right can be determined from upper left of diagonally adjacent tile
+  lr_x, lr_y = coordinateProj(z, x+1, y+1)
+
+  return math.min(ul_x, lr_x), math.min(ul_y, lr_y), math.max(ul_x, lr_x), math.max(ul_y, lr_y)
+
+end
+
+
 -- get request path variables
 local layer, pathrow, type, date, x, y, z =
   ngx.var.layer, ngx.var.pathrow, ngx.var.type, ngx.var.date, ngx.var.x, ngx.var.y, ngx.var.z
--- satamap only construction to layer
-local layername = layer .. "/" .. pathrow .. "/" .. type .. "/" .. date .. "/"
 
 local result = 0, library_path
 
--- ngx.say(ngx.var.scheme);
--- ngx.say(ngx.var.cachepath);
 
 ngx.log(ngx.NOTICE, "Creating tile image")
-
 
 local ffi = require("ffi")
 
@@ -83,10 +111,9 @@ if result ~= 0 then
   ngx.exit(0)
 end
 
-local xmin = 16671833.113336448
-local ymin = -3443946.7464169525
-local xmax = 16750104.630300466
-local ymax = -3365675.229452934
+-- derive web mercator bounds for slippy map tile
+xmin, ymin, xmax, ymax = envelope(z, x, y)
+
 local box = clib.mapnik_bbox(xmin, ymin, xmax, ymax)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to create bounding box")
@@ -96,7 +123,8 @@ if result ~= 0 then
 end
 
 clib.mapnik_map_zoom_to_box(map, box)
-local file_cache_path = "./cache/" .. layername .. "/" .. z .. "/" .. x .. "/" .. y .. ".jpg"
+
+local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
 result = clib.mapnik_map_render_to_file(map, file_cache_path)
 -- log where tile is being written to
 ngx.log(ngx.NOTICE, "Writing to " .. file_cache_path)
@@ -106,7 +134,6 @@ if result ~= 0 then
   ngx.log(ngx.ERR, errstr)
   ngx.exit(0)
 end
-
 
 clib.mapnik_map_free(map)
 
