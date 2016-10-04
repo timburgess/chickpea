@@ -43,3 +43,6 @@ luac.out
 *.TIF
 *.TIF.bz2
 
+# ignore local nginx.conf
+nginx.conf
+
