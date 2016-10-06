@@ -1,10 +1,67 @@
+local ffi = require("ffi")
 
---local function return_not_found(msg)
---  ngx.status = ngx.HTTP_NOT_FOUND
---  ngx.header["Content-type"] = "text/html"
---  ngx.say(msg or "not found")
---  ngx.exit(0)
---end
+ffi.cdef[[
+// mkdir
+int mkdir(const char *filename, unsigned int mode);
+
+// Mapnik
+
+int mapnik_register_datasources(const char* path, char** err);
+
+//  Opaque class structure
+typedef struct _mapnik_map_t mapnik_map_t;
+
+// Bbox
+typedef struct _mapnik_bbox_t mapnik_bbox_t;
+
+mapnik_bbox_t * mapnik_bbox(double minx, double miny, double maxx, double maxy);
+
+void mapnik_bbox_free(mapnik_bbox_t * b);
+
+// Map
+mapnik_map_t * mapnik_map( unsigned int width, unsigned int height );
+
+void mapnik_map_free(mapnik_map_t * m);
+
+const char * mapnik_map_last_error(mapnik_map_t * m);
+
+const char * mapnik_map_get_srs(mapnik_map_t * m);
+
+int mapnik_map_set_srs(mapnik_map_t * m, const char* srs);
+
+int mapnik_map_load(mapnik_map_t * m, const char* stylesheet);
+
+int mapnik_map_zoom_all(mapnik_map_t * m);
+
+void mapnik_map_zoom_to_box(mapnik_map_t * m, mapnik_bbox_t * b);
+
+int mapnik_map_render_to_file(mapnik_map_t * m, const char* filepath);
+]]
+
+-- check platform and load appropriate mapnik C lib
+if ffi.os == "OSX" then
+  library_path = "./lib/libmapnik_c.dylib"
+else
+  library_path = "./lib/libmapnik_c.so"
+end
+local clib = ffi.load(library_path)
+
+-- iterate through path to create required cache subdirs
+-- we presume that the root cache dir exists
+local function mkdir(fullpath)
+  -- get cache root without trailing slash
+  local newdir = ngx.var.cacheroot:sub(1, -2)
+  for s in string.gmatch(fullpath, "(%w+)/") do
+    newdir = newdir .. "/" .. s
+    -- TODO report on errs other than existing dir
+    local status = ffi.C.mkdir(newdir, 0x1ff)
+--    if status ~= 0 then
+--      ngx.log(ngx.ERR, "failed to create directory " .. newdir)
+--      ngx.log(ngx.ERR, "status " .. status)
+--      ngx.exit(0)
+--    end
+  end
+end
 
 -- log error msg and last mapnik error
 --local function report_error(msg)
@@ -55,49 +112,6 @@ local result = 0, library_path
 
 ngx.log(ngx.NOTICE, "Creating tile image")
 
-local ffi = require("ffi")
-
-ffi.cdef[[
-int mapnik_register_datasources(const char* path, char** err);
-
-//  Opaque class structure
-typedef struct _mapnik_map_t mapnik_map_t;
-
-// Bbox
-typedef struct _mapnik_bbox_t mapnik_bbox_t;
-
-mapnik_bbox_t * mapnik_bbox(double minx, double miny, double maxx, double maxy);
-
-void mapnik_bbox_free(mapnik_bbox_t * b);
-
-// Map
-mapnik_map_t * mapnik_map( unsigned int width, unsigned int height );
-
-void mapnik_map_free(mapnik_map_t * m);
-
-const char * mapnik_map_last_error(mapnik_map_t * m);
-
-const char * mapnik_map_get_srs(mapnik_map_t * m);
-
-int mapnik_map_set_srs(mapnik_map_t * m, const char* srs);
-
-int mapnik_map_load(mapnik_map_t * m, const char* stylesheet);
-
-int mapnik_map_zoom_all(mapnik_map_t * m);
-
-void mapnik_map_zoom_to_box(mapnik_map_t * m, mapnik_bbox_t * b);
-
-int mapnik_map_render_to_file(mapnik_map_t * m, const char* filepath);
-]]
-
--- check platform and load appropriate mapnik C lib
-if ffi.os == "OSX" then
-  library_path = "./lib/libmapnik_c.dylib"
-else
-  library_path = "./lib/libmapnik_c.so"
-end
-local clib = ffi.load(library_path)
-
 result = clib.mapnik_register_datasources("/usr/local/lib/mapnik/input", nil)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to register datasource")
@@ -126,11 +140,12 @@ end
 
 clib.mapnik_map_zoom_to_box(map, box)
 
-local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
--- check if cache dir exists. if not, create it
-local newdir = file_cache_path:match("(.*/)")
-os.execute("mkdir -p " .. newdir)
+-- TODO check if cache dir exists. if not, create it
+local newdir = ngx.var.cachepath:match("(.*/)")
+mkdir(newdir)
 
+-- render image
+local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
 result = clib.mapnik_map_render_to_file(map, file_cache_path)
 -- log where tile is being written to
 ngx.log(ngx.NOTICE, "Writing to " .. file_cache_path)
