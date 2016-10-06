@@ -16,6 +16,9 @@ http {
         location ~ ^/tile/(?<layer>[^/]+)/(?<pathrow>[^/]+)/(?<type>[^/]+)/(?<date>[^/]+)/(?<z>[^/]+)/(?<x>[^/]+)/(?<y>[^.]+) {
           set $cacheroot "/Users/tim/work/chickpea/cache/"; # note trailing slash
           root $cacheroot;
+          set $xmlroot "/Users/tim/work/chickpea/sample/";
+
+          set $xmlpath "${layer}_${type}_$pathrow$date.xml";
           set $cachepath "$layer/$pathrow/$type/$date/$z/$x/$y.jpg";
           try_files $cachepath @image_server;
         }

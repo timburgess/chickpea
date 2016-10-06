@@ -118,10 +118,11 @@ if result ~= 0 then
 end
 
 local map = clib.mapnik_map(256,256)
--- get map
-result = clib.mapnik_map_load(map, "./sample/l8_rgb_09108020160924.xml")
+-- load xml and get map
+local xmlpath = ngx.var.xmlroot .. ngx.var.xmlpath
+result = clib.mapnik_map_load(map, xmlpath)
 if result ~= 0 then
-  ngx.log(ngx.ERR, "failed to load xml file")
+  ngx.log(ngx.ERR, "failed to load " .. xmlpath)
   local errstr = ffi.string(clib.mapnik_map_last_error(map))
   ngx.log(ngx.ERR, errstr)
   ngx.exit(0)
