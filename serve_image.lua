@@ -68,7 +68,9 @@ typedef struct _mapnik_bbox_t mapnik_bbox_t;
 
 mapnik_bbox_t * mapnik_bbox(double minx, double miny, double maxx, double maxy);
 
+void mapnik_bbox_free(mapnik_bbox_t * b);
 
+// Map
 mapnik_map_t * mapnik_map( unsigned int width, unsigned int height );
 
 void mapnik_map_free(mapnik_map_t * m);
@@ -139,6 +141,8 @@ if result ~= 0 then
   ngx.exit(0)
 end
 
+-- free up resources
+clib.mapnik_bbox_free(box)
 clib.mapnik_map_free(map)
 
 -- trigger new internal request

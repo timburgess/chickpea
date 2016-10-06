@@ -14,7 +14,9 @@ typedef struct _mapnik_bbox_t mapnik_bbox_t;
 
 mapnik_bbox_t * mapnik_bbox(double minx, double miny, double maxx, double maxy);
 
+void mapnik_bbox_free(mapnik_bbox_t * b);
 
+// Map
 mapnik_map_t * mapnik_map( unsigned int width, unsigned int height );
 
 void mapnik_map_free(mapnik_map_t * m);
@@ -79,7 +81,7 @@ end
 -- get request path variables
 local layer, pathrow, type, date, x, y, z =
   --ngx.var.layer, ngx.var.pathrow, ngx.var.type, ngx.var.date, ngx.var.x, ngx.var.y, ngx.var.z
-  "l8", "091080", "rgb", "20160924", "10", "938", "597"
+  "l8", "091080", "rgb", "20160924", 10, 938, 597
 
 local result = 0, library_path
 
@@ -106,6 +108,10 @@ end
 
 -- derive web mercator bounds for slippy map tile
 xmin, ymin, xmax, ymax = envelope(z, x, y)
+--print(xmin)
+--print(ymin)
+--print(xmax)
+--print(ymax)
 
 local box = clib.mapnik_bbox(xmin, ymin, xmax, ymax)
 if result ~= 0 then
@@ -138,6 +144,7 @@ if result ~= 0 then
   os.exit(0)
 end
 
+clib.mapnik_bbox_free(box)
 clib.mapnik_map_free(map)
 
 -- trigger new internal request
