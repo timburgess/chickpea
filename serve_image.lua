@@ -1,6 +1,15 @@
-local ffi = require("ffi")
+local require = require
+local ffi = require "ffi"
+local ffi_cdef = ffi.cdef
+local ffi_load = ffi.load
+local ffi_string = ffi.string
+local C = ffi.C
+local min = math.min
+local max = math.max
+local log = math.log
+local pow = math.pow
 
-ffi.cdef[[
+ffi_cdef[[
 // mkdir
 int mkdir(const char *filename, unsigned int mode);
 
@@ -44,7 +53,7 @@ if ffi.os == "OSX" then
 else
   library_path = "./lib/libmapnik_c.so"
 end
-local clib = ffi.load(library_path)
+local clib = ffi_load(library_path)
 
 -- iterate through path to create required cache subdirs
 -- we presume that the root cache dir exists
@@ -54,7 +63,7 @@ local function mkdir(fullpath)
   for s in string.gmatch(fullpath, "(%w+)/") do
     newdir = newdir .. "/" .. s
     -- TODO report on errs other than existing dir
-    local status = ffi.C.mkdir(newdir, 0x1ff)
+    local status = C.mkdir(newdir, 0x1ff)
 --    if status ~= 0 then
 --      ngx.log(ngx.ERR, "failed to create directory " .. newdir)
 --      ngx.log(ngx.ERR, "status " .. status)
@@ -72,23 +81,21 @@ end
 
 -- new coords with zoom applied
 local function zoomTo(zoom_factor, z, x, y)
-  return x * math.pow(2, zoom_factor - z), y * math.pow(2, zoom_factor - z), zoom_factor
+  return x * pow(2, zoom_factor - z), y * pow(2, zoom_factor - z), zoom_factor
 end
 
 -- convert from Slippy Map coordinate to Web Mercator point
 -- see https://en.wikipedia.org/wiki/Web_Mercator
 local function coordinateProj(z, x, y)
-
   -- zoom for meters on the ground
   diameter = 2 * math.pi * 6378137
-  zoom_factor = math.log(diameter) / math.log(2)
+  zoom_factor = log(diameter) / log(2)
   x, y, z = zoomTo(zoom_factor, z, x, y)
 
   -- global offsets
   x = x - diameter/2
   y = diameter/2 - y
   return x, y
-
 end
 
 -- projected rendering envelope (xmin, ymin, xmax, ymax) for Slippy map coord
@@ -98,8 +105,7 @@ local function envelope(z, x, y)
   -- lower right can be determined from upper left of diagonally adjacent tile
   lr_x, lr_y = coordinateProj(z, x+1, y+1)
 
-  return math.min(ul_x, lr_x), math.min(ul_y, lr_y), math.max(ul_x, lr_x), math.max(ul_y, lr_y)
-
+  return min(ul_x, lr_x), min(ul_y, lr_y), max(ul_x, lr_x), max(ul_y, lr_y)
 end
 
 
@@ -123,7 +129,7 @@ local xmlpath = ngx.var.xmlroot .. ngx.var.xmlpath
 result = clib.mapnik_map_load(map, xmlpath)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to load " .. xmlpath)
-  local errstr = ffi.string(clib.mapnik_map_last_error(map))
+  local errstr = ffi_string(clib.mapnik_map_last_error(map))
   ngx.log(ngx.ERR, errstr)
   ngx.exit(0)
 end
@@ -134,7 +140,7 @@ xmin, ymin, xmax, ymax = envelope(z, x, y)
 local box = clib.mapnik_bbox(xmin, ymin, xmax, ymax)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to create bounding box")
-  local errstr = ffi.string(clib.mapnik_map_last_error(map))
+  local errstr = ffi_string(clib.mapnik_map_last_error(map))
   ngx.log(ngx.ERR, errstr)
   ngx.exit(0)
 end
@@ -152,7 +158,7 @@ result = clib.mapnik_map_render_to_file(map, file_cache_path)
 ngx.log(ngx.NOTICE, "Writing to " .. file_cache_path)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to render image")
-  local errstr = ffi.string(clib.mapnik_map_last_error(map))
+  local errstr = ffi_string(clib.mapnik_map_last_error(map))
   ngx.log(ngx.ERR, errstr)
   ngx.exit(0)
 end
