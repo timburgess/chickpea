@@ -1,6 +1,11 @@
 local require = require
 local ffi = require "ffi"
+local platform = require "platform"
+local syscall = require "syscall"
+local fs = require "fs"
 local ffi_cdef = ffi.cdef
+local ffi_errno = ffi.errno
+local ffi_typeof = ffi.typeof
 local ffi_load = ffi.load
 local ffi_string = ffi.string
 local C = ffi.C
@@ -10,6 +15,7 @@ local log = math.log
 local pow = math.pow
 
 ffi_cdef[[
+
 // mkdir
 int mkdir(const char *filename, unsigned int mode);
 
@@ -47,6 +53,7 @@ void mapnik_map_zoom_to_box(mapnik_map_t * m, mapnik_bbox_t * b);
 int mapnik_map_render_to_file(mapnik_map_t * m, const char* filepath);
 ]]
 
+
 -- check platform and load appropriate mapnik C lib
 if ffi.os == "OSX" then
   library_path = "./lib/libmapnik_c.dylib"
@@ -54,6 +61,36 @@ else
   library_path = "./lib/libmapnik_c.so"
 end
 local clib = ffi_load(library_path)
+
+
+--- Read out file metadata with a given path
+function stat(path, buf)
+  local stat_t = ffi_typeof("struct stat")
+  if not buf then buf = stat_t() end
+  local ret = C.stat(path, buf)
+  if ret == -1 then
+    return -1, ffi_string(C.strerror(ffi_errno()))
+  end
+  return buf
+end
+
+--- Check whether a given path is directory
+function is_dir(path)
+  local buf, err = stat(path, nil)
+  if buf == -1 then return false, err end
+  -- TODO identify explicitly as directory
+  --ngx.log(ngx.NOTICE, "Dir exists ")
+  return true
+
+--  if bit.band(buf.st_mode, syscall.S_IFMT) == syscall.S_IFDIR then
+--    ngx.log(ngx.NOTICE, "Dir exists ")
+--    return true
+--  else
+--    ngx.log(ngx.NOTICE, "Dir does not exist ")
+--    return false
+--  end
+end
+
 
 -- iterate through path to create required cache subdirs
 -- we presume that the root cache dir exists
@@ -64,11 +101,6 @@ local function mkdir(fullpath)
     newdir = newdir .. "/" .. s
     -- TODO report on errs other than existing dir
     local status = C.mkdir(newdir, 0x1ff)
---    if status ~= 0 then
---      ngx.log(ngx.ERR, "failed to create directory " .. newdir)
---      ngx.log(ngx.ERR, "status " .. status)
---      ngx.exit(0)
---    end
   end
 end
 
@@ -116,8 +148,6 @@ local layer, pathrow, type, date, x, y, z =
 local result = 0, library_path
 
 
-ngx.log(ngx.NOTICE, "Creating tile image")
-
 result = clib.mapnik_register_datasources("/usr/local/lib/mapnik/input", nil)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to register datasource")
@@ -147,12 +177,16 @@ end
 
 clib.mapnik_map_zoom_to_box(map, box)
 
--- TODO check if cache dir exists. if not, create it
-local newdir = ngx.var.cachepath:match("(.*/)")
-mkdir(newdir)
+-- check if cache dir exists. if not, create it
+local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
+local file_cache_dir = file_cache_path:match("(.*/)")
+if not is_dir(file_cache_dir) then
+  ngx.log(ngx.NOTICE, "Directory does not exist. Creating ...")
+  local newdir = ngx.var.cachepath:match("(.*/)")
+  mkdir(newdir)
+end
 
 -- render image
-local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
 result = clib.mapnik_map_render_to_file(map, file_cache_path)
 -- log where tile is being written to
 ngx.log(ngx.NOTICE, "Writing to " .. file_cache_path)
