@@ -64,20 +64,9 @@ local function mkdir(fullpath)
     newdir = newdir .. "/" .. s
     -- TODO report on errs other than existing dir
     local status = C.mkdir(newdir, 0x1ff)
---    if status ~= 0 then
---      ngx.log(ngx.ERR, "failed to create directory " .. newdir)
---      ngx.log(ngx.ERR, "status " .. status)
---      ngx.exit(0)
---    end
   end
 end
 
--- log error msg and last mapnik error
---local function report_error(msg)
---  ngx.log(ngx.ERR, "failed to load xml file")
---  local errstr = ffi.string(clib.mapnik_map_last_error(map))
---  ngx.log(ngx.ERR, errstr)
---end
 
 -- new coords with zoom applied
 local function zoomTo(zoom_factor, z, x, y)
