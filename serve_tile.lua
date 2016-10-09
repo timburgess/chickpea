@@ -98,17 +98,17 @@ local function envelope(z, x, y)
   return min(ul_x, lr_x), min(ul_y, lr_y), max(ul_x, lr_x), max(ul_y, lr_y)
 end
 
+
 local function validate_url(sat, layertype, pathrow, date)
 
   if sat == 'l8' then
-    ngx.var.xmlpath = "l8_xmls/l8_" .. layertype .. "_" .. pathrow .. date .. ".xml"
-    return true
+    return ngx.var.xmlroot .. "l8_xmls/l8_" .. layertype .. "_" .. pathrow .. date .. ".xml"
   elseif sat == 's2a' then
-    ngx.var.xmlpath = "s2a_xmls/s2a_" .. layertype .. "_" .. date .. ".xml"
-    return true
+    return ngx.var.xmlroot .. "s2a_xmls/s2a_" .. layertype .. "_" .. date .. ".xml"
   end
 
-  return false
+  ngx.log(ngx.ERR, "Ivalid request type")
+  return ""
 end
 
 ---- MAIN ----
@@ -117,11 +117,11 @@ end
 local layer, pathrow, type, date, x, y, z =
   ngx.var.layer, ngx.var.pathrow, ngx.var.type, ngx.var.date, ngx.var.x, ngx.var.y, ngx.var.z
 
-local result = 0, library_path
+local result = 0, library_path, xmlpath
 
 -- validate the url according to custom logic
 -- TODO 404 redirect on false
-validate_url(layer, type, pathrow, date)
+xmlpath = validate_url(layer, type, pathrow, date)
 
 
 --ngx.log(ngx.NOTICE, "Creating tile image")
@@ -133,7 +133,9 @@ end
 
 local map = clib.mapnik_map(256,256)
 -- load xml and get map
-local xmlpath = ngx.var.xmlroot .. ngx.var.xmlpath
+if xmlpath == nil then
+  xmlpath = ngx.var.xmlroot .. ngx.var.xmlpath
+end
 result = clib.mapnik_map_load(map, xmlpath)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to load " .. xmlpath)
