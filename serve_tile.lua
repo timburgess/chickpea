@@ -1,4 +1,5 @@
 local require = require
+--require "validate_url"
 local ffi = require "ffi"
 local ffi_cdef = ffi.cdef
 local ffi_load = ffi.load
@@ -97,6 +98,20 @@ local function envelope(z, x, y)
   return min(ul_x, lr_x), min(ul_y, lr_y), max(ul_x, lr_x), max(ul_y, lr_y)
 end
 
+local function validate_url(sat, layertype, pathrow, date)
+
+  if sat == 'l8' then
+    ngx.var.xmlpath = "l8_xmls/l8_" .. layertype .. "_" .. pathrow .. date .. ".xml"
+    return true
+  elseif sat == 's2a' then
+    ngx.var.xmlpath = "s2a_xmls/s2a_" .. layertype .. "_" .. date .. ".xml"
+    return true
+  end
+
+  return false
+end
+
+---- MAIN ----
 
 -- get request path variables
 local layer, pathrow, type, date, x, y, z =
@@ -104,8 +119,12 @@ local layer, pathrow, type, date, x, y, z =
 
 local result = 0, library_path
 
+-- validate the url according to custom logic
+-- TODO 404 redirect on false
+validate_url(layer, type, pathrow, date)
 
-ngx.log(ngx.NOTICE, "Creating tile image")
+
+--ngx.log(ngx.NOTICE, "Creating tile image")
 
 result = clib.mapnik_register_datasources("/usr/local/lib/mapnik/input", nil)
 if result ~= 0 then
