@@ -4,11 +4,14 @@ daemon off;
 events { }
 
 http {
+
+    lua_package_path "/path/to/chickpea/lib/?.lua;;";
+
     server {
         listen 8080;
         # serve tiles if not in the cache
         location @tileserver {
-          content_by_lua_file "/Users/tim/work/chickpea/serve_image.lua";
+          content_by_lua_file "/path/to/chickpea/serve_image.lua";
         }
 
         # capture tile request e.g. /tile/l8/091080/rgb/20160924/10/938/597.jpg
