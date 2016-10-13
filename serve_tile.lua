@@ -31,9 +31,9 @@ end
 -- see https://en.wikipedia.org/wiki/Web_Mercator
 local function coordinateProj(z, x, y)
   -- zoom for meters on the ground
-  diameter = 2 * math.pi * 6378137
-  zoom_factor = log(diameter) / log(2)
-  x, y, z = zoomTo(zoom_factor, z, x, y)
+  local diameter = 2 * math.pi * 6378137
+  local zoom_factor = log(diameter) / log(2)
+  local x, y, z = zoomTo(zoom_factor, z, x, y)
 
   -- global offsets
   x = x - diameter/2
@@ -44,9 +44,9 @@ end
 -- projected rendering envelope (xmin, ymin, xmax, ymax) for Slippy map coord
 local function envelope(z, x, y)
   -- get upper left coords
-  ul_x, ul_y = coordinateProj(z, x, y)
+  local ul_x, ul_y = coordinateProj(z, x, y)
   -- lower right can be determined from upper left of diagonally adjacent tile
-  lr_x, lr_y = coordinateProj(z, x+1, y+1)
+  local lr_x, lr_y = coordinateProj(z, x+1, y+1)
 
   return min(ul_x, lr_x), min(ul_y, lr_y), max(ul_x, lr_x), max(ul_y, lr_y)
 end
@@ -59,14 +59,9 @@ end
 local layer, pathrow, type, date, x, y, z =
   ngx.var.layer, ngx.var.pathrow, ngx.var.type, ngx.var.date, ngx.var.x, ngx.var.y, ngx.var.z
 
-local result = 0, library_path, xmlpath
-
 -- validate the url according to custom logic
--- TODO 404 redirect on false
-xmlpath = validate_url(layer, type, pathrow, date)
-
-
---ngx.log(ngx.NOTICE, "Creating tile image")
+-- 404 redirect on invalid url
+local xmlpath = validate_url(layer, type, pathrow, date)
 
 local result = mapnik:register_datasources("/usr/local/lib/mapnik/input")
 if result ~= 0 then
