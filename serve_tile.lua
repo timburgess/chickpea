@@ -5,6 +5,7 @@ local log = math.log
 local pow = math.pow
 
 -- modify this to validate the urls requested
+-- ensure that an invalid url returns 404
 local function validate_url(sat, layertype, pathrow, date)
 
   if sat == 'l8' then
@@ -13,8 +14,9 @@ local function validate_url(sat, layertype, pathrow, date)
     return ngx.var.xmlroot .. "s2a_xmls/s2a_" .. layertype .. "_" .. date .. ".xml"
   end
 
-  ngx.log(ngx.ERR, "Invalid request type")
-  return ""
+  ngx.status = 404
+  ngx.log(ngx.NOTICE, "Invalid tile request url")
+  ngx.exit(ngx.OK)
 end
 
 
