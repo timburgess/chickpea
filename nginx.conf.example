@@ -4,23 +4,26 @@ daemon off;
 events { }
 
 http {
+
+    lua_package_path "/path/to/chickpea/lib/?.lua;;";
+
     server {
         listen 8080;
         # serve tiles if not in the cache
-        location @image_server {
-          content_by_lua_file "/Users/tim/work/chickpea/serve_image.lua";
+        location @tileserver {
+          content_by_lua_file "/path/to/chickpea/serve_image.lua";
         }
 
         # capture tile request e.g. /tile/l8/091080/rgb/20160924/10/938/597.jpg
         # regex named capture groups for each param
         location ~ ^/tile/(?<layer>[^/]+)/(?<pathrow>[^/]+)/(?<type>[^/]+)/(?<date>[^/]+)/(?<z>[^/]+)/(?<x>[^/]+)/(?<y>[^.]+) {
-          set $cacheroot "/Users/tim/work/chickpea/cache/"; # note trailing slash
+          set $cacheroot "/path/to/chickpea/cache/"; # note trailing slash
           root $cacheroot;
-          set $xmlroot "/Users/tim/work/chickpea/sample/";
+          set $xmlroot "/path/to/chickpea/sample/";
 
           set $xmlpath "${layer}_${type}_$pathrow$date.xml";
           set $cachepath "$layer/$pathrow/$type/$date/$z/$x/$y.jpg";
-          try_files $cachepath @image_server;
+          try_files $cachepath @tileserver;
         }
 
         # root page
