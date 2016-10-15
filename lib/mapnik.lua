@@ -69,7 +69,7 @@ end
 
 
 function _M.register_datasources(self, path)
-  return clib.mapnik_register_datasources("/usr/local/lib/mapnik/input", nil)
+  return clib.mapnik_register_datasources(path, nil)
 end
 
 function _M.map(self, dim1, dim2)

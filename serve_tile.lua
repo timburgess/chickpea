@@ -63,7 +63,7 @@ local layer, pathrow, type, date, x, y, z =
 -- 404 redirect on invalid url
 local xmlpath = validate_url(layer, type, pathrow, date)
 
-local result = mapnik:register_datasources("/usr/local/lib/mapnik/input")
+local result = mapnik:register_datasources(ngx.var.mapnik_datasource)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to register datasource")
 end
