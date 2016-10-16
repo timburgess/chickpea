@@ -12,6 +12,8 @@ local function validate_url(sat, layertype, pathrow, date)
     return ngx.var.xmlroot .. "l8_xmls/l8_" .. layertype .. "_" .. pathrow .. date .. ".xml"
   elseif sat == 's2a' then
     return ngx.var.xmlroot .. "s2a_xmls/s2a_" .. layertype .. "_" .. date .. ".xml"
+  elseif sat == 'user' then
+    return ngx.var.xmlroot .. "/user_bucket/g2_jpeg.xml"
   end
 
   ngx.status = 404
