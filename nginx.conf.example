@@ -22,6 +22,7 @@ http {
 
         # capture tile request e.g. /tile/l8/091080/rgb/20160924/10/938/597.jpg
         # regex named capture groups for each param
+        # multiple locations can be defined 
         location ~ ^/tile/(?<layer>[^/]+)/(?<pathrow>[^/]+)/(?<type>[^/]+)/(?<date>[^/]+)/(?<z>[^/]+)/(?<x>[^/]+)/(?<y>[^.]+) {
 
           set $xmlroot "/path/to/chickpea/sample/";
