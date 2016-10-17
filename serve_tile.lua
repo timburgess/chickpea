@@ -6,14 +6,10 @@ local pow = math.pow
 
 -- modify this to validate the urls requested
 -- ensure that an invalid url returns 404
-local function validate_url(sat, layertype, pathrow, date)
+local function validate_url(source, layertype, pathrow, date)
 
-  if sat == 'l8' then
-    return ngx.var.xmlroot .. "l8_xmls/l8_" .. layertype .. "_" .. pathrow .. date .. ".xml"
-  elseif sat == 's2a' then
-    return ngx.var.xmlroot .. "s2a_xmls/s2a_" .. layertype .. "_" .. date .. ".xml"
-  elseif sat == 'user' then
-    return ngx.var.xmlroot .. "/user_bucket/g2_jpeg.xml"
+  if source == 'l8' or source == 's2a' or source == 'uav' then
+    return ngx.var.xmlroot .. ngx.var.xmlpath
   end
 
   ngx.status = 404
@@ -58,12 +54,12 @@ end
 ---- MAIN ----
 
 -- get request path variables
-local layer, pathrow, type, date, x, y, z =
-  ngx.var.layer, ngx.var.pathrow, ngx.var.type, ngx.var.date, ngx.var.x, ngx.var.y, ngx.var.z
+local source, pathrow, type, date, x, y, z =
+  ngx.var.source, ngx.var.pathrow, ngx.var.type, ngx.var.date, ngx.var.x, ngx.var.y, ngx.var.z
 
 -- validate the url according to custom logic
 -- 404 redirect on invalid url
-local xmlpath = validate_url(layer, type, pathrow, date)
+local xmlpath = validate_url(source, type, pathrow, date)
 
 local result = mapnik:register_datasources(ngx.var.mapnik_datasource)
 if result ~= 0 then
