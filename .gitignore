@@ -45,4 +45,5 @@ luac.out
 
 # ignore local nginx.conf
 nginx.conf
+nginx.conf.old
 
