@@ -1,4 +1,5 @@
 local mapnik = require "mapnik"
+local fs = require "fs"
 local min = math.min
 local max = math.max
 local log = math.log
@@ -95,7 +96,7 @@ mapnik:map_zoom_to_box(map, box)
 
 -- TODO check if cache dir exists. if not, create it
 local newdir = ngx.var.cachepath:match("(.*/)")
-mapnik:mkdir(newdir)
+fs:mkdir(newdir)
 
 -- render image
 local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
