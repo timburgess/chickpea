@@ -15,14 +15,14 @@ http {
 
         # serve tiles if not in the cache
         location @tileserver {
-
+          set $mapnik_clib "/path/to/chickpea/clib"
           set $mapnik_datasource "/usr/local/lib/mapnik/input";
           content_by_lua_file "/path/to/chickpea/serve_image.lua";
         }
 
         # capture tile request e.g. /tile/l8/091080/rgb/20160924/10/938/597.jpg
         # regex named capture groups for each param
-        # multiple locations can be defined 
+        # multiple locations can be defined
         location ~ ^/tile/(?<layer>[^/]+)/(?<pathrow>[^/]+)/(?<type>[^/]+)/(?<date>[^/]+)/(?<z>[^/]+)/(?<x>[^/]+)/(?<y>[^.]+) {
 
           set $xmlroot "/path/to/chickpea/sample/";

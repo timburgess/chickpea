@@ -48,9 +48,9 @@ int mapnik_map_render_to_file(mapnik_map_t * m, const char* filepath);
 
 -- check platform and load appropriate mapnik C lib
 if ffi.os == "OSX" then
-  library_path = "./clib/libmapnik_c.dylib"
+  library_path = ngx.var.mapnik_clib .. "/libmapnik_c.dylib"
 else
-  library_path = "./clib/libmapnik_c.so"
+  library_path = ngx.var.mapnik_clib .. "/libmapnik_c.so"
 end
 local clib = ffi_load(library_path)
 
