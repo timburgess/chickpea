@@ -1,5 +1,6 @@
 local ffi = require "ffi"
 local platform = require "platform"
+local syscall = require "syscall"
 
 local ffi_cdef = ffi.cdef
 local ffi_load = ffi.load
@@ -23,7 +24,6 @@ char *strerror(int errnum);
 
 if platform.__X86__ then
 
-    SYS_stat = 106  -- stat()
     ffi.cdef[[
       struct stat {
         unsigned long  st_dev;
@@ -48,7 +48,6 @@ if platform.__X86__ then
     ]]
 elseif platform.__X64__ then
 
-    SYS_stat = 4  -- stat()
     ffi.cdef [[
       struct stat {
         unsigned long   st_dev;
@@ -77,9 +76,9 @@ elseif platform.__X64__ then
 function fs.stat(self, path, buf)
   local stat_t = ffi.typeof("struct stat")
   if not buf then buf = stat_t() end
-  --local ret = ffi.C.syscall(SYS_stat, path, buf)
+  local ret = ffi.C.syscall(syscall.SYS_stat, path, buf)
   --local ret = ffi.C.syscall(syscall.SYS_stat, path, buf)
-  local ret = ffi.C.stat(path, buf)
+  --local ret = ffi.C.stat(path, buf)
   ngx.log(ngx.NOTICE, ret)
   if ret == -1 then
     return -1, ffi.string(ffi.C.strerror(ffi.errno()))
@@ -97,9 +96,14 @@ function fs.is_dir(self, path)
     ngx.log(ngx.NOTICE, err)
     return false, err
   end
-
-  -- check bit band
-  return true
+  local foo = buf.st_mode
+  ngx.log(ngx.NOTICE, foo)
+  if bit.band(buf.st_mode, syscall.S_IFDIR) == syscall.S_IFDIR then
+    return true
+  else
+    ngx.log(ngx.NOTICE, "Dir does not exist")
+    return false
+  end
 end
 
 
