@@ -94,9 +94,14 @@ end
 
 mapnik:map_zoom_to_box(map, box)
 
--- TODO check if cache dir exists. if not, create it
-local newdir = ngx.var.cachepath:match("(.*/)")
-fs:mkdir(newdir)
+-- match to trailing slash then remove slash
+local dirpath = ngx.var.cachepath:match(".*/"):sub(1,-2)
+local ret, err = fs:is_dir(ngx.var.cacheroot .. dirpath)
+if not ret then
+  fs:mkdir(dirpath)
+else
+  ngx.log(ngx.NOTICE, "filepath exists")
+end
 
 -- render image
 local file_cache_path = ngx.var.cacheroot .. ngx.var.cachepath
