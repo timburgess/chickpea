@@ -99,8 +99,6 @@ mapnik:map_zoom_to_box(map, box)
 local dirpath = ngx.var.cachepath:match(".*/"):sub(1,-2)
 if not S.stat(ngx.var.cacheroot .. dirpath) then
   fs:mkdir(dirpath)
-else
-  ngx.log(ngx.NOTICE, "filepath exists")
 end
 
 -- render image

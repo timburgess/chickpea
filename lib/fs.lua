@@ -11,7 +11,6 @@ function fs.mkdir(self, fullpath)
   local newdir = ngx.var.cacheroot:sub(1, -2)
   for s in string.gmatch(fullpath, "%w+") do
     newdir = newdir .. "/" .. s
-    ngx.log(ngx.NOTICE, "Making " .. newdir)
     local status = S.mkdir(newdir, "0755")
   end
 end
