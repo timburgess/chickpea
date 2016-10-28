@@ -13,8 +13,7 @@ local function validate_url(source, layertype, pathrow, date)
   if source == 'l8' or source == 's2a' or source == 'uav' then
     return ngx.var.xmlroot .. ngx.var.xmlpath
   end
-
-  ngx.status = 404
+ngx.status = 404
   ngx.log(ngx.NOTICE, "Invalid tile request url")
   ngx.exit(ngx.OK)
 end
@@ -79,6 +78,7 @@ ngx = {
 for numx = 935, 939 do
 for numy = 595, 601 do
 ngx.var.x, ngx.var.y = tostring(numx), tostring(numy)
+ngx.var.cachepath = "s2a/rgb/20161007/10/" .. ngx.var.x .. "/" .. ngx.var.y .. ".jpg"
 -- '091080': [(935, 595), (939,601)]
 
 -- get request path variables
