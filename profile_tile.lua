@@ -55,18 +55,26 @@ end
 
 ---- MAIN ----
 
--- dummy ngx.var variables
-ngx = { var = {
-  source  = "s2a",
-  pathrow = "091080",
-  type = "rgb",
-  date = "20161007",
-  z = "10",
-  x = "940",
-  y = "598",
-  xmlroot = "/Volumes/Firewire", 
-  xmlpath = "s2a_xmls"
-}}
+-- dummy ngx environment
+ngx = { 
+  var = {
+    source  = "s2a",
+    pathrow = "091080",
+    type = "rgb",
+    date = "20161007",
+    z = "10",
+    x = "940",
+    y = "598",
+    xmlroot = "/home/ben/", 
+    xmlpath = "s2a_xmls/s2a_rgb_20161007.xml",
+    cacheroot = "/home/ben/cache/",
+    cachepath = "s2a/rgb/20161007/10/940/598.jpg",
+    mapnik_datasource = "/usr/local/lib/mapnik/input",
+    request_url = "dummy.html" -- we just need a placeholder
+  },
+  log = function(foo, msg) print(msg) end,
+  exec = function(url) end
+}
 
 -- get request path variables
 local source, pathrow, type, date, x, y, z =
@@ -76,11 +84,11 @@ local source, pathrow, type, date, x, y, z =
 -- 404 redirect on invalid url
 local xmlpath = validate_url(source, type, pathrow, date)
 
-os.exit()
 local result = mapnik:register_datasources(ngx.var.mapnik_datasource)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to register datasource")
 end
+--os.exit()
 
 local map = mapnik:map(256,256)
 
