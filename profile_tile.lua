@@ -76,6 +76,11 @@ ngx = {
   exec = function(url) end
 }
 
+for numx = 935, 939 do
+for numy = 595, 601 do
+ngx.var.x, ngx.var.y = tostring(numx), tostring(numy)
+-- '091080': [(935, 595), (939,601)]
+
 -- get request path variables
 local source, pathrow, type, date, x, y, z =
   ngx.var.source, ngx.var.pathrow, ngx.var.type, ngx.var.date, ngx.var.x, ngx.var.y, ngx.var.z
@@ -88,7 +93,6 @@ local result = mapnik:register_datasources(ngx.var.mapnik_datasource)
 if result ~= 0 then
   ngx.log(ngx.ERR, "failed to register datasource")
 end
---os.exit()
 
 local map = mapnik:map(256,256)
 
@@ -140,4 +144,7 @@ mapnik:bbox_free(box)
 mapnik:map_free(map)
 
 -- trigger new internal request
-ngx.exec(ngx.var.request_uri)
+--ngx.exec(ngx.var.request_uri)
+
+end
+end
