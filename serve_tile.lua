@@ -6,11 +6,19 @@ local max = math.max
 local log = math.log
 local pow = math.pow
 
--- modify this to validate the urls requested
--- ensure that an invalid url returns 404
+-- Modify this to validate the urls requested. This function (including parameters) can be
+-- modified to suit your specific needs.
+-- It should ensure that an invalid url returns 404
 local function validate_url(source, layertype, pathrow, date)
 
-  if source == 'l8' or source == 's2a' or source == 'uav' then
+  -- define valid sources here
+  local valid_sources = {
+    l8 = true,
+    s2a = true,
+    uav = true,
+    mgrs = true
+  }
+  if valid_sources[source] then
     return ngx.var.xmlroot .. ngx.var.xmlpath
   end
 
